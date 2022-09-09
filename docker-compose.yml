@@ -1,0 +1,40 @@
+services:
+  greeter:
+    build:
+      context: .
+      dockerfile: cmd/greeter/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      pg:
+        condition: service_healthy
+    restart: on-failure
+
+  pg:
+    image: postgres:14.2
+    environment:
+      PGUSER: greeter
+      POSTGRES_USER: greeter
+      POSTGRES_PASSWORD: greeter
+      POSTGRES_DB: greeter
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  migrate:
+    image: migrate/migrate
+    command:
+      - -path
+      - /migrations
+      - -database
+      - postgres://greeter:greeter@pg:5432/greeter?sslmode=disable
+      - up
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      pg:
+        condition: service_healthy
