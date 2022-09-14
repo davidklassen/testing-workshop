@@ -1,3 +1,7 @@
+.PHONY: init
+init:
+	./scripts/init.sh
+
 .PHONY: generate
 generate:
 	go generate ./...
